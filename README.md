@@ -4,7 +4,7 @@ Rough design doc(intended more as a personal reference while the development is 
 
 1. Bitboard based engine
 2. Use machine learning in the evaluation function -- figure out the details. Will probably be a neural network.
-3. Bitboards - 3: white, black, and king.
+3. Bitboards - 3: light, dark, and king.
 4. All the bitboards are 64 bit integers
 5. What will the directory structure be like?
 --- Directory structure:
@@ -18,13 +18,13 @@ g) search.cpp, search.hpp
 
 6. Classes - the board class.
 
-Will contain the data members white, black and king.
+Will contain the data members light, dark and king.
 The constructor will initialize them to the required values.
 A printing method will be present to print the board.
 makeMove()
 undoMove()
 generateAllMoves() -- function to generate legal moves
 
-main structure -- class board: board() { white = ..., black = ..., king = ...}
+main structure -- class board: board() { light = ..., dark = ..., king = ...}
 main will initialize a board object.
 

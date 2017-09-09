@@ -5,7 +5,7 @@
 
 class board {
 private:
-  uint64_t white, black, king;
+  uint64_t light, dark, king;
 public:
   board();
   void printBoard();
