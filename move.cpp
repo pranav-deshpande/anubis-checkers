@@ -4,6 +4,7 @@
 // I will totally avoid the move generation for kings now
 // Let us worry about wrap arounds and out of boards later
 // First I will write code only for the light side
+// Then for the dark side
 
 void board::generateAllMoves() {
   uint64_t tempLight, tempDark, tempKing, block;
