@@ -24,13 +24,19 @@ Premature optimization is the root of evil
 #include <cstdint>
 
 board::board() {
-  side  = LIGHT;
-
-  light = LIGHT_START;
-  dark  = DARK_START;
-  king  = KING_START;
-
   moveHistory.clear();
+  setPosition(LIGHT, Move(LIGHT_START, DARK_START, KING_START));
+
+  // This position is stored in the move history due to undoMove() issues
+  moveHistory.push_back(Move(LIGHT_START, DARK_START, KING_START));
+}
+
+void board::setPosition(uint64_t side, Move position) {
+  this->side = side;
+
+  light = position.valLight();
+  dark  = position.valDark();
+  king  = position.valKing();
 }
 
 void board::printBoard() {
@@ -57,23 +63,28 @@ void board::makeMove(Move move) {
   dark  = move.valDark();
   king  = move.valKing();
 
+  // switch sides
+  side = !side;
+
   moveHistory.push_back(move);
 }
 
 void board::undoMove() {
-  if(moveHistory.empty()) {
+  if(moveHistory.empty() || moveHistory.size() == 1) {
     printf("Error, no moves to undo!!\n");
     exit(0);
   }
 
   int index = moveHistory.size() - 1;
-  light = moveHistory[index].valLight();
-  dark  = moveHistory[index].valDark();
-  king  = moveHistory[index].valKing();
+  light = moveHistory[index-1].valLight();
+  dark  = moveHistory[index-1].valDark();
+  king  = moveHistory[index-1].valKing();
+
+  // switch sides
+  side = !side;
 
   moveHistory.pop_back();
 }
-
 
 void board::generateAllMoves(std::vector<Move> &moves) {
   uint64_t tempLight, tempDark, tempLightKing, tempDarkKing, tempKing,block;
@@ -81,6 +92,8 @@ void board::generateAllMoves(std::vector<Move> &moves) {
   block = light | dark;
   lightKing = light & king;
   darkKing  = dark & king;
+
+  moves.clear();
 
   if (side == LIGHT) {
     for(int i=0; i<64; i++) {
@@ -91,6 +104,8 @@ void board::generateAllMoves(std::vector<Move> &moves) {
         uint64_t start = i;
         uint64_t end1 = start+7;
         uint64_t end2 = start+9;
+
+        tempLight = light, tempDark = dark, tempKing = king;
 
         // If there is something over there already - we check beyond that to see captures...
         if ( (1ULL << end1) & block ) continue;
@@ -110,6 +125,41 @@ void board::generateAllMoves(std::vector<Move> &moves) {
         if (start % 8 != 7) {
           tempLight = tempLight & (~(1ULL << start)); //zero that square
           tempLight = tempLight | (1ULL << end2); //one at the new pos now
+          Move move(tempLight, tempDark, tempKing);
+          moves.push_back(move);
+        }
+      }
+    }
+  }
+
+  if (side == DARK) {
+    for(int i=0; i<64; i++) {
+
+      if( (1ULL << i) & dark ) {
+        uint64_t start = i;
+        uint64_t end1 = start-9;
+        uint64_t end2 = start-7;
+
+        // If there is something over there already - we check beyond that to see captures...
+        if ( (1ULL << end1) & block ) continue;
+        if ( (1ULL << end2) & block ) continue;
+
+        tempLight = light, tempDark = dark, tempKing = king;
+
+        // If 7 is added to start, it causes "curling up"
+        if (start % 8 != 0) {
+          tempDark = tempDark & (~(1ULL << start)); //zero that square
+          tempDark = tempDark | (1ULL << end1); //one at the new pos now
+          Move move(tempLight, tempDark, tempKing);
+          moves.push_back(move);
+        }
+
+        tempLight = light, tempDark = dark, tempKing = king;
+
+        // If 9 is added to start, it causes "curling up"
+        if (start % 8 != 7) {
+          tempDark = tempDark & (~(1ULL << start)); //zero that square
+          tempDark = tempDark | (1ULL << end2); //one at the new pos now
           Move move(tempLight, tempDark, tempKing);
           moves.push_back(move);
         }

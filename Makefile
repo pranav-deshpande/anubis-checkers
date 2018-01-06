@@ -1,13 +1,13 @@
 CXX=g++
 CFLAGS=-I. --std=c++11
-DEPS=board.hpp move.hpp
-OBJ=board.o move.o main.o
+DEPS=board.hpp move.hpp test.hpp
+OBJ=board.o move.o test.o main.o
 
 %.o: %.c $(DEPS)
-	$(CXX) -c -o $@ $< $(CFLAGS)
+	$(CXX) $(CFLAGS) -c -o $@ $<
 
 anubis_checkers: $(OBJ)
-	$(CXX) -o $@ $^ $(CFLAGS)
+	$(CXX) $(CFLAGS) -o $@ $^
 
 clean:
-	rm board.o move.o main.o
+	rm board.o move.o test.o main.o anubis_checkers
