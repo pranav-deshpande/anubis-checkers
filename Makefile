@@ -1,7 +1,13 @@
-SRC_FILES = board.cpp move.cpp main.cpp
+CXX=g++
+CFLAGS=-I. --std=c++11
+DEPS=board.hpp
+OBJ=board.o move.o main.o
 
-all: anubis_checkers
+%.o: %.c $(DEPS)
+	$(CXX) -c -o $@ $< $(CFLAGS)
 
-anubis_checkers: $(SRC_FILES)
-	g++ -std=c++11 $(SRC_FILES) -o $@
-	
+anubis_checkers: $(OBJ)
+	$(CXX) -o $@ $^ $(CFLAGS)
+
+clean:
+	rm board.o move.o main.o
