@@ -28,4 +28,5 @@ uint64_t Move::valKing() {
 
 void Move::print() {
   printf("Light: 0x%" PRIx64 "\nDark: 0x%" PRIx64 "\nKing: 0x%" PRIx64, light, dark, king);
+  putchar('\n');
 }

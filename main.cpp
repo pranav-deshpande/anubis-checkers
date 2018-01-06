@@ -32,6 +32,10 @@ int main() {
   for(auto it = moves.begin(); it != moves.end(); it++) {
     it->print();
     putchar('\n');
+    game.makeMove(*it);
+    game.printBoard();
+    game.undoMove();
+    putchar('\n');
   }
   /*
   for(int i = 0; i < 64; i++) {
