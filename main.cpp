@@ -20,7 +20,19 @@ void printBin(const T& t){
 int main() {
   board game;
   game.printBoard();
-  game.generateAllMoves();
+  std::vector<Move> moves;
+  game.generateAllMoves(moves);
+
+  if(moves.empty()) {
+    printf("No valid moves\n");
+    exit(0);
+  }
+  printf("The total number of moves valid now is: %d\n", moves.size());
+
+  for(auto it = moves.begin(); it != moves.end(); it++) {
+    it->print();
+    putchar('\n');
+  }
   /*
   for(int i = 0; i < 64; i++) {
     printBin((1ULL << i));

@@ -1,25 +1,31 @@
-#include "board.hpp"
 #include "move.hpp"
-#include <iostream>
+#include <cstdio>
 
-// All multiples of 8 are corner squares - avoid addding 7 to these
-// All multiples of 8 minus 1 are corner squares - avoid adding 9 these
+#define __STDC_FORMAT_MACROS
+#include <cinttypes>
 
-void board::generateAllMoves() {
-  uint64_t tempLight, tempDark, tempKing, block;
-  block = light | dark;
-  tempLight = light;
-  tempDark  = dark;
-  tempKing  = king;
+Move::Move() {
+  light = dark = king = 0x0000000000000000;
+}
 
-  int count = 0;
+Move::Move(uint64_t L, uint64_t D, uint64_t K){
+  light = L;
+  dark  = D;
+  king  = K;
+}
 
-  for(int i=0; i<64; i++) {
-    if( (1ULL << i) & light ) {
-      count++;
-    }
-  }
+uint64_t Move::valLight() {
+  return light;
+}
 
-  std::cout << count << std::endl;
+uint64_t Move::valDark() {
+  return dark;
+}
 
+uint64_t Move::valKing() {
+  return king;
+}
+
+void Move::print() {
+  printf("Light: 0x%" PRIx64 "\nDark: 0x%" PRIx64 "\nKing: 0x%" PRIx64, light, dark, king);
 }

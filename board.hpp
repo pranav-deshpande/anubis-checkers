@@ -19,8 +19,8 @@ private:
 public:
   board();
   void printBoard();
-  void generateAllMoves();
-  void makeMove(Move move);
+  void generateAllMoves(std::vector<Move> &);
+  void makeMove(Move);
   void undoMove();
 };
 
