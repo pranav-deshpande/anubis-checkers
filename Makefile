@@ -1,6 +1,6 @@
 CXX=g++
 CFLAGS=-I. --std=c++11
-DEPS=board.hpp
+DEPS=board.hpp move.hpp
 OBJ=board.o move.o main.o
 
 %.o: %.c $(DEPS)

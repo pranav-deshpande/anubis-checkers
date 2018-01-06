@@ -3,19 +3,24 @@
 
 #include <cstdint>
 #include <vector>
+#include "move.hpp"
 
 #define LIGHT 0
-#define DARK 1
+#define DARK  1
+#define LIGHT_START 0x000000000055aa55
+#define DARK_START  0xaa55aa0000000000
+#define KING_START  0x0000000000000000
 
 class board {
 private:
   uint64_t light, dark, king;
   int side;
+  std::vector <Move> moveHistory;
 public:
   board();
   void printBoard();
   void generateAllMoves();
-  void makeMove(uint64_t L, uint64_t D, uint64_t K);
+  void makeMove(Move move);
   void undoMove();
 };
 

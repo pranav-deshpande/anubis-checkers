@@ -1,27 +1,39 @@
+// Remember - the numbers are going from right to left
+// We are talking about board representation right now
+/*
+63 62 61 60 59 58 57 56
+...
+...
+15 14 13 12 11 10 9  8
+7  6  5  4  3  2  1  0
+*/
+// Example - 0x...........55 => 01010101 normally ...written in the above sense, we have:
+// 10101010
 #include "board.hpp"
 #include <iostream>
 #include <cstdio>
 #include <vector>
 #include <cstdint>
 
-#define LIGHT 0
-#define DARK 1
-
 board::board() {
   side  = LIGHT;
-  light = 0x000000000055aa55;
-  dark  = 0xaa55aa0000000000;
-  king  = 0x0000000000000000;
+
+  light = LIGHT_START;
+  dark  = DARK_START;
+  king  = KING_START;
+
+  moveHistory.clear();
 }
 
 void board::printBoard() {
-  for(int i = 7; i >= 0; i--) {
-    int j = i * 8;
-    for(int k = j; k < j + 8; k++) {
-      if ( (1ULL << k) & light ) {
+  for(int row = 7; row >= 0; row--) {
+    int row_start = row * 8;
+    int row_end = row_start + 8;
+    for(int col = row_start; col < row_end; col++) {
+      if ( (1ULL << col) & light ) {
         std::cout << 'l';
       }
-      else if ( (1ULL << k) & dark ) {
+      else if ( (1ULL << col) & dark ) {
         std::cout << 'd';
       }
       else
@@ -29,15 +41,24 @@ void board::printBoard() {
     }
     std::cout << std::endl;
    }
-   std::cout << "Debug data: " << std::endl;
-   printf("light: %lx\ndark: %lx\nking: %lx\n", light, dark, king);
 }
 
-void board::makeMove(uint64_t L, uint64_t D, uint64_t K) {
-  light = L;
-  dark  = D;
-  king  = K;
+void board::makeMove(Move move) {
+  light = move.valLight();
+  dark  = move.valDark();
+  king  = move.valKing();
 }
 
 void board::undoMove() {
+  if(moveHistory.empty()) {
+    printf("Error, no moves to undo!!\n");
+    exit(0);
+  }
+
+  int index = moveHistory.size() - 1;
+  light = moveHistory[index].valLight();
+  dark  = moveHistory[index].valDark();
+  king  = moveHistory[index].valKing();
+
+  moveHistory.pop_back();
 }
