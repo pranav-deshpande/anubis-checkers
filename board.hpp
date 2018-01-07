@@ -1,6 +1,25 @@
 #ifndef BOARD
 #define BOARD
 
+// Remember - the numbers are going from right to left
+// We are talking about board representation right now
+/*
+63 62 61 60 59 58 57 56
+55 54 53 52 51 50 49 48
+47 46 45 44 43 42 41 40
+39 38 37 36 35 34 33 32
+31 30 29 28 27 26 25 24
+23 22 21 20 19 18 17 16
+15 14 13 12 11 10 9  8
+7  6  5  4  3  2  1  0
+*/
+// Example - 0x...........55 => 01010101 normally ...written in the above sense, we have:
+// 10101010
+
+/*
+Premature optimization is the root of evil
+*/
+
 #include <cstdint>
 #include <vector>
 #include "move.hpp"
