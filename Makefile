@@ -8,7 +8,7 @@ OBJ=board.o move.o test.o main.o
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 anubis_checkers: $(OBJ)
-	$(CXX) $(CFLAGS) $(LINKER_FLAGS) -o $@ $^
+	$(CXX) $(CFLAGS) -o $@ $^ $(LINKER_FLAGS)
 
 clean:
 	rm board.o move.o test.o main.o anubis_checkers
