@@ -42,6 +42,9 @@ public:
   void generateAllMoves(std::vector<Move> &);
   void makeMove(Move);
   void undoMove();
+  uint64_t getLight();
+  uint64_t getDark();
+  // yeah...we could do a getKing here as well, right now..I am working on graphics..so no..
 };
 
 #endif
