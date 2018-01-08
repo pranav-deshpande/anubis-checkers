@@ -1,3 +1,23 @@
+/*
+Anubis - Checkers Game
+Copyright (C) 2017-2018 Pranav Deshpande
+
+This file is a part of Anubis.
+
+Anubis is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+Anubis is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Anubis. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 // Remember - the numbers are going from right to left
 // We are talking about board representation right now
 /*
@@ -47,6 +67,10 @@ uint64_t board::getLight() {
 
 uint64_t board::getDark() {
   return dark;
+}
+
+uint64_t board::getKing() {
+  return king;
 }
 
 void board::printBoard() {
