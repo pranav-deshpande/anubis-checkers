@@ -41,6 +41,7 @@ First complete the basic stuff.
 #define INVALID -1
 
 void GUIprintBoard(board &,sf::RenderWindow &, sf::Sprite &, sf::Sprite &);
+void playMoveIfValid(board &, int, int);
 
 int main() {
   board game;
@@ -88,93 +89,70 @@ int main() {
           break;
 
         case sf::Event::MouseButtonPressed:
-          if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-          {
-            sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-
-            // now this makes us know which is the required checker selected!
-            // coordinates in multiples of 75 obtained
-            int x = localPosition.x - localPosition.x%CHECKER_SIZE;
-            int y = localPosition.y - localPosition.y%CHECKER_SIZE;
-
-            // map it to [0, 8)
-            int actX = x/CHECKER_SIZE;
-            int actY = y/CHECKER_SIZE;
-            printf("actX: %d, actY: %d\n", actX, actY);
-
-            // Obtain the position as per the bitboard representation
-            int actPosition = (7-actY)*8 + (actX);
-
-            uint64_t light = game.getLight();
-            uint64_t dark  = game.getDark();
-            uint64_t block = light | dark;
-
-            if ( (1ULL << actPosition) & block ){
-              initPos = actPosition;
-            }
-            else {
-              initPos = INVALID;
-            }
-          }
-          else if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
-            sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-
-            // coordinates in multiples of 75 obtained
-            int x = localPosition.x - localPosition.x%CHECKER_SIZE;
-            int y = localPosition.y - localPosition.y%CHECKER_SIZE;
-
-            // map it to [0, 8)
-            int actX = x/CHECKER_SIZE;
-            int actY = y/CHECKER_SIZE;
-
-            // Obtain the position as per the bitboard representation
-            int actPosition = (7-actY)*8 + (actX);
-
-            uint64_t light = game.getLight();
-            uint64_t dark  = game.getDark();
-            uint64_t block = light | dark;
-
-            if ( (1ULL << actPosition) & block ){
-              targetPos = INVALID;
-            }
-            else {
-              targetPos = actPosition;
-            }
-          }
-          if ( initPos != INVALID && targetPos != INVALID ) {
-            uint64_t light = game.getLight();
-            uint64_t dark  = game.getDark();
-            std::vector<Move> moveList;
-            game.generateAllMoves(moveList);
-            if ( (1ULL << initPos) & light ) {
-              light = light & ~(1ULL << initPos);
-              light = light | (1ULL << targetPos);
-            }
-            if ( (1ULL << initPos) & dark ) {
-              dark = dark & ~(1ULL << initPos);
-              dark = dark | (1ULL << targetPos);
-            }
-            bool valid = false;
-            for(auto it = moveList.begin(); it != moveList.end(); it++) {
-              if( it->valLight() == light && it->valDark() == dark ) {
-                valid = true;
-                game.makeMove(*it);
-                game.printBoard();
-                break;
-              }
-            }
-            if(valid == false) {
-              // do nothing
-              ;
-            }
-          }
-
-
           break;
 
         default:
           break;
       }
+    }
+
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+    {
+      sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+
+      // now this makes us know which is the required checker selected!
+      // coordinates in multiples of 75 obtained
+      int x = localPosition.x - localPosition.x%CHECKER_SIZE;
+      int y = localPosition.y - localPosition.y%CHECKER_SIZE;
+
+      // map it to [0, 8)
+      int actX = x/CHECKER_SIZE;
+      int actY = y/CHECKER_SIZE;
+      printf("actX: %d, actY: %d\n", actX, actY);
+
+      // Obtain the position as per the bitboard representation
+      int actPosition = (7-actY)*8 + (actX);
+
+      uint64_t light = game.getLight();
+      uint64_t dark  = game.getDark();
+      uint64_t block = light | dark;
+
+      if ( (1ULL << actPosition) & block ){
+        initPos = actPosition;
+      }
+      else {
+        initPos = INVALID;
+      }
+    }
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+      sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+
+      // coordinates in multiples of CHECKER_SIZE obtained
+      int x = localPosition.x - localPosition.x%CHECKER_SIZE;
+      int y = localPosition.y - localPosition.y%CHECKER_SIZE;
+
+      // map it to [0, 8)
+      int actX = x/CHECKER_SIZE;
+      int actY = y/CHECKER_SIZE;
+
+      // Obtain the position as per the bitboard representation
+      int actPosition = (7-actY)*8 + (actX);
+
+      uint64_t light = game.getLight();
+      uint64_t dark  = game.getDark();
+      uint64_t block = light | dark;
+
+      if ( (1ULL << actPosition) & block ){
+        targetPos = INVALID;
+      }
+      else {
+        targetPos = actPosition;
+      }
+    }
+    if ( initPos != INVALID && targetPos != INVALID ) {
+      playMoveIfValid(game, initPos, targetPos);
+      initPos   = INVALID;
+      targetPos = INVALID;
     }
 
     // clear the window
@@ -209,6 +187,37 @@ void GUIprintBoard(board &game, sf::RenderWindow &window, sf::Sprite &redChecker
       window.draw(blueChecker);
     }
     else {;}
+  }
+}
+
+void playMoveIfValid(board &game, int initPos, int targetPos) {
+
+  // Obtain the current state of the board
+  uint64_t light, dark;
+  light = game.getLight();
+  dark  = game.getDark();
+  int side = game.getSide();
+
+  std::vector<Move> moves;
+  game.generateAllMoves(moves);
+
+  for(auto it = moves.begin(); it != moves.end(); it++) {
+    if (side == LIGHT && ((1ULL << initPos) & light)) {
+      if ( (1ULL << targetPos) & it->valLight() ) {
+        game.makeMove(*it);
+        game.printBoard();
+        printf("Light played.\n");
+        return;
+      }
+    }
+    if (side == DARK && ((1ULL << initPos) & dark)) {
+      if ((1ULL << targetPos) & it->valDark() ) {
+        game.makeMove(*it);
+        game.printBoard();
+        printf("Dark played.\n");
+        return;
+      }
+    }
   }
 }
 

@@ -62,6 +62,7 @@ public:
   void generateAllMoves(std::vector<Move> &);
   void makeMove(Move);
   void undoMove();
+  int getSide();
   uint64_t getLight();
   uint64_t getDark();
   uint64_t getKing();

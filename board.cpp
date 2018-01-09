@@ -61,6 +61,10 @@ void board::setPosition(uint64_t side, Move position) {
   moveHistory.push_back(Move(light, dark, king));
 }
 
+int board::getSide() {
+  return side;
+}
+
 uint64_t board::getLight() {
   return light;
 }
