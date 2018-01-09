@@ -26,6 +26,7 @@ along with Anubis. If not, see <http://www.gnu.org/licenses/>.
 #include <cstdio>
 #include <cstdint>
 #include <cassert>
+#include <vector>
 
 /*
 Don't work too much on one day.
@@ -37,11 +38,14 @@ First complete the basic stuff.
 */
 
 #define CHECKER_SIZE 75
+#define INVALID -1
 
 void GUIprintBoard(board &,sf::RenderWindow &, sf::Sprite &, sf::Sprite &);
 
 int main() {
   board game;
+  int initPos, targetPos;
+  targetPos = initPos = INVALID;
 
   sf::RenderWindow window(sf::VideoMode(600, 600), "Anubis - Checkers Playing AI", sf::Style::Close);
   window.setVerticalSyncEnabled(true);
@@ -79,16 +83,11 @@ int main() {
 
     while (window.pollEvent(event)) {
       switch (event.type) {
-        // window closed
         case sf::Event::Closed:
           window.close();
           break;
 
         case sf::Event::MouseButtonPressed:
-          if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            //printf("The left mouse button was pressed.\n");
-            ;
-          }
           if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
           {
             sf::Vector2i localPosition = sf::Mouse::getPosition(window);
@@ -97,59 +96,86 @@ int main() {
             // coordinates in multiples of 75 obtained
             int x = localPosition.x - localPosition.x%CHECKER_SIZE;
             int y = localPosition.y - localPosition.y%CHECKER_SIZE;
-            //printf("X: %d, Y: %d\n", x, y);
 
             // map it to [0, 8)
-            int actX = x/75;
-            int actY = y/75;
+            int actX = x/CHECKER_SIZE;
+            int actY = y/CHECKER_SIZE;
             printf("actX: %d, actY: %d\n", actX, actY);
 
             // Obtain the position as per the bitboard representation
-            int actPosition = (7-actY)*8 + (7-actX);
-            printf("actPosition: %d\n", actPosition);
+            int actPosition = (7-actY)*8 + (actX);
 
-            // Test the formula devised
-            int xPos = (7 - actPosition%8);
-            int yPos = (7 - actPosition/8);
-            printf("xPos: %d, yPos: %d\n", xPos, yPos);
-
-            // As a temporary act, I will make some piece disappear
             uint64_t light = game.getLight();
             uint64_t dark  = game.getDark();
-            uint64_t king  = game.getKing();
+            uint64_t block = light | dark;
 
-            if ( ((1ULL << actPosition) & light) ) {
-              light = light & (~(1ULL << actPosition));
-              printf("I was here\n");
+            if ( (1ULL << actPosition) & block ){
+              initPos = actPosition;
             }
-
-            if ( ((1ULL << actPosition) & dark) ) {
-              dark = dark & (~(1ULL << actPosition));
-              //printf("I was here as well\n");
+            else {
+              initPos = INVALID;
             }
-
-            Move move(light, dark, king);
-            game.makeMove(move);
-            //move.print();
-            //putchar('\n');
-            game.printBoard();
-            putchar('\n');
-
-            // actual moves will involve checking stuff
-            /*
-            vector<Move> moveList;
-            generateAllMoves(moveList);
-            */
           }
+          else if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+            sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+
+            // coordinates in multiples of 75 obtained
+            int x = localPosition.x - localPosition.x%CHECKER_SIZE;
+            int y = localPosition.y - localPosition.y%CHECKER_SIZE;
+
+            // map it to [0, 8)
+            int actX = x/CHECKER_SIZE;
+            int actY = y/CHECKER_SIZE;
+
+            // Obtain the position as per the bitboard representation
+            int actPosition = (7-actY)*8 + (actX);
+
+            uint64_t light = game.getLight();
+            uint64_t dark  = game.getDark();
+            uint64_t block = light | dark;
+
+            if ( (1ULL << actPosition) & block ){
+              targetPos = INVALID;
+            }
+            else {
+              targetPos = actPosition;
+            }
+          }
+          if ( initPos != INVALID && targetPos != INVALID ) {
+            uint64_t light = game.getLight();
+            uint64_t dark  = game.getDark();
+            std::vector<Move> moveList;
+            game.generateAllMoves(moveList);
+            if ( (1ULL << initPos) & light ) {
+              light = light & ~(1ULL << initPos);
+              light = light | (1ULL << targetPos);
+            }
+            if ( (1ULL << initPos) & dark ) {
+              dark = dark & ~(1ULL << initPos);
+              dark = dark | (1ULL << targetPos);
+            }
+            bool valid = false;
+            for(auto it = moveList.begin(); it != moveList.end(); it++) {
+              if( it->valLight() == light && it->valDark() == dark ) {
+                valid = true;
+                game.makeMove(*it);
+                game.printBoard();
+                break;
+              }
+            }
+            if(valid == false) {
+              // do nothing
+              ;
+            }
+          }
+
+
           break;
 
         default:
           break;
       }
     }
-
-    // now get the mouse input...uh ok got to do this yeah...
-    // tried placing this inside the sf::Event::Mouse thing, it was SLOW
 
     // clear the window
     window.clear(sf::Color::Black);
@@ -167,20 +193,13 @@ int main() {
 }
 
 void GUIprintBoard(board &game, sf::RenderWindow &window, sf::Sprite &redChecker, sf::Sprite &blueChecker) {
-
-  // currently, this is printing a laterally flipped board. Hence, it is wrong
-  // This function is to be corrected
-
   int multiple = CHECKER_SIZE;
   uint64_t light = game.getLight();
   uint64_t dark  = game.getDark();
 
   for(int i = 0; i < 64; i++) {
-    int xPos = (7 - i%8) * multiple;
+    int xPos = (i%8) * multiple;
     int yPos = (7 - i/8) * multiple;
-
-    //printf("X: %d, Y: %d\n", xPos, yPos);
-
     if ( (1ULL << i) & light ) {
       redChecker.setPosition(xPos, yPos);
       window.draw(redChecker);
@@ -192,37 +211,6 @@ void GUIprintBoard(board &game, sf::RenderWindow &window, sf::Sprite &redChecker
     else {;}
   }
 }
-
-/*
-void GUIprintBoard(board &game, sf::RenderWindow &window, sf::Sprite &redChecker, sf::Sprite &blueChecker) {
-  int multiple = CHECKER_SIZE;
-  uint64_t light = game.getLight();
-  uint64_t dark  = game.getDark();
-
-  for(int row = 7; row >= 0; row--) {
-    int row_start = row * 8;
-    int row_end = row_start + 8;
-    for(int col = row_start; col < row_end; col++) {
-
-      int xPos = (col%8)*multiple;
-      int yPos = (7-row)*multiple;
-
-      // integrity check for my formula above
-      assert(((7-yPos)*8 + (7-xPos)) == col);
-
-      if ( (1ULL << col) & light ) {
-        redChecker.setPosition(xPos, yPos);
-        window.draw(redChecker);
-      }
-      else if ( (1ULL << col) & dark ) {
-        blueChecker.setPosition(xPos, yPos);
-        window.draw(blueChecker);
-      }
-      else {;}
-    }
-   }
-}
-*/
 
 /*
 int main() {
