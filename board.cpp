@@ -45,6 +45,9 @@ Premature optimization is the root of evil
 #include <vector>
 #include <cstdint>
 
+#define LIGHT_TEST 0x108a55aa
+#define DARK_TEST 0x55aa510800000000
+
 board::board() {
   setPosition(LIGHT, Move(LIGHT_START, DARK_START, KING_START));
 }
@@ -140,9 +143,45 @@ void board::generateAllMoves(std::vector<Move> &moves) {
     for(int i=0; i<64; i++) {
 
       if( (1ULL << i) & light ) {
-        uint64_t start = i;
-        uint64_t end1 = start+7;
-        uint64_t end2 = start+9;
+        int start = i;
+        int end1 = start+7;
+        int end2 = start+9;
+        int end3 = start+14;
+        int end4 = start+18;
+
+        // If there is something over there already - we check beyond that to see captures...
+        tempLight = light, tempDark = dark, tempKing = king;
+        if ( (1ULL << end1) & block ) {
+          if ( (1ULL << end1) & dark ) {
+            if ( !((1ULL << end3) & block) ) {
+              // avoid "wrapping"
+              if( start % 8 != 0 && start % 8 != 1) {
+                tempLight = tempLight & (~(1ULL << start)); //zero that square
+                tempDark  = tempDark  & (~(1ULL << end1 )); //remove the dark piece
+                tempLight = tempLight | (1ULL << end3); //one at the new pos now
+                Move move(tempLight, tempDark, tempKing);
+                moves.push_back(move);
+              }
+            }
+          }
+        }
+
+        // If there is something over there already - we check beyond that to see captures...
+        tempLight = light, tempDark = dark, tempKing = king;
+        if ( (1ULL << end2) & block ) {
+          if ( (1ULL << end2) & dark ) {
+            if ( !((1ULL << end4) & block) ) {
+              if(start % 8 != 7 && start % 8 != 6) {
+                // avoid "wrapping"
+                tempLight = tempLight & (~(1ULL << start)); //zero that square
+                tempDark  = tempDark  & (~(1ULL << end2 )); //remove the dark piece
+                tempLight = tempLight | (1ULL << end4); //one at the new pos now
+                Move move(tempLight, tempDark, tempKing);
+                moves.push_back(move);
+              }
+            }
+          }
+        }
 
         // If 7 is added to start, it causes "curling up"
         tempLight = light, tempDark = dark, tempKing = king;
@@ -166,41 +205,6 @@ void board::generateAllMoves(std::vector<Move> &moves) {
           }
         }
 
-        // If there is something over there already - we check beyond that to see captures...
-        tempLight = light, tempDark = dark, tempKing = king;
-        if ( (1ULL << end1) & block ) {
-          if ( (1ULL << end1) & dark ) {
-            uint64_t end3 = start + 14;
-            if ( !((1ULL << end3) & block) ) {
-              // avoid "wrapping"
-              if( start % 8 != 0 && start % 8 == 1) {
-                tempLight = tempLight & (~(1ULL << start)); //zero that square
-                tempDark  = tempDark  & (~(1ULL << end1 )); //remove the dark piece
-                tempLight = tempLight | (1ULL << end3); //one at the new pos now
-                Move move(tempLight, tempDark, tempKing);
-                moves.push_back(move);
-              }
-            }
-          }
-        }
-
-        // If there is something over there already - we check beyond that to see captures...
-        tempLight = light, tempDark = dark, tempKing = king;
-        if ( (1ULL << end2) & block ) {
-          if ( (1ULL << end2) & dark ) {
-            uint64_t end4 = start + 18;
-            if ( !((1ULL << end4) & block) ) {
-              if(start % 8 != 7 && start % 8 != 6) {
-                // avoid "wrapping"
-                tempLight = tempLight & (~(1ULL << start)); //zero that square
-                tempDark  = tempDark  & (~(1ULL << end2 )); //remove the dark piece
-                tempLight = tempLight | (1ULL << end4); //one at the new pos now
-                Move move(tempLight, tempDark, tempKing);
-                moves.push_back(move);
-              }
-            }
-          }
-        }
       }
     }
   }
@@ -212,6 +216,43 @@ void board::generateAllMoves(std::vector<Move> &moves) {
         uint64_t start = i;
         uint64_t end1 = start-9;
         uint64_t end2 = start-7;
+        uint64_t end3 = start - 18;
+        uint64_t end4 = start-14;
+
+        // If there is something over there already - we check beyond that to see captures...
+        tempLight = light, tempDark = dark, tempKing = king;
+        if ( (1ULL << end1) & block ) {
+          if ( (1ULL << end1) & light ) {
+            if ( !((1ULL << end3) & block) ) {
+              // avoid "wrapping"
+              if(start % 8 != 0 && start % 8 != 1) {
+                tempDark = tempDark & (~(1ULL << start)); //zero that square
+                tempLight = tempLight & (~(1ULL << end1)); //remove the light piece
+                tempDark = tempDark | (1ULL << end3); //one at the new pos now
+                Move move(tempLight, tempDark, tempKing);
+                moves.push_back(move);
+              }
+            }
+          }
+        }
+
+        // If there is something over there already - we check beyond that to see captures...
+        tempLight = light, tempDark = dark, tempKing = king;
+        if ( (1ULL << end2) & block ) {
+          if ( (1ULL << end2) & light ) {
+
+            if ( !((1ULL << end4) & block) ) {
+              if(start % 8 != 7 && start % 8 != 6) {
+                // avoid "wrapping"
+                tempDark = tempDark & (~(1ULL << start)); //zero that square
+                tempLight = tempLight & (~(1ULL << end2)); //remove the light piece
+                tempDark = tempDark | (1ULL << end4); //one at the new pos now
+                Move move(tempLight, tempDark, tempKing);
+                moves.push_back(move);
+              }
+            }
+          }
+        }
 
         // If 9 is subracted from the start, it causes "curling up"
         tempLight = light, tempDark = dark, tempKing = king;
@@ -232,42 +273,6 @@ void board::generateAllMoves(std::vector<Move> &moves) {
             tempDark = tempDark | (1ULL << end2); //one at the new pos now
             Move move(tempLight, tempDark, tempKing);
             moves.push_back(move);
-          }
-        }
-
-        // If there is something over there already - we check beyond that to see captures...
-        tempLight = light, tempDark = dark, tempKing = king;
-        if ( (1ULL << end1) & block ) {
-          if ( (1ULL << end1) & light ) {
-            uint64_t end3 = start - 18;
-            if ( !((1ULL << end3) & block) ) {
-              // avoid "wrapping"
-              if(start % 8 != 0 && start % 8 != 1) {
-                tempDark = tempDark & (~(1ULL << start)); //zero that square
-                tempLight = tempLight & (~(1ULL << end1)); //remove the light piece
-                tempDark = tempDark | (1ULL << end3); //one at the new pos now
-                Move move(tempLight, tempDark, tempKing);
-                moves.push_back(move);
-              }
-            }
-          }
-        }
-
-        // If there is something over there already - we check beyond that to see captures...
-        tempLight = light, tempDark = dark, tempKing = king;
-        if ( (1ULL << end2) & block ) {
-          if ( (1ULL << end2) & light ) {
-            uint64_t end4 = start - 14;
-            if ( !((1ULL << end4) & block) ) {
-              if(start % 8 != 7 && start % 8 != 6) {
-                // avoid "wrapping"
-                tempDark = tempDark & (~(1ULL << start)); //zero that square
-                tempLight = tempLight & (~(1ULL << end2)); //remove the light piece
-                tempDark = tempDark | (1ULL << end4); //one at the new pos now
-                Move move(tempLight, tempDark, tempKing);
-                moves.push_back(move);
-              }
-            }
           }
         }
       }

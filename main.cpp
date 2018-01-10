@@ -27,6 +27,7 @@ along with Anubis. If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include <cassert>
 #include <vector>
+#include <cinttypes>
 
 /*
 Don't work too much on one day.
@@ -39,6 +40,7 @@ First complete the basic stuff.
 
 #define CHECKER_SIZE 75
 #define INVALID -1
+#define __STDC_FORMAT_MACROS
 
 void GUIprintBoard(board &,sf::RenderWindow &, sf::Sprite &, sf::Sprite &);
 void playMoveIfValid(board &, int, int);
@@ -46,6 +48,7 @@ void playMoveIfValid(board &, int, int);
 int main() {
   board game;
   int initPos, targetPos;
+  //manualTest(game);
 
   sf::RenderWindow window(sf::VideoMode(600, 600), "Anubis - Checkers Playing AI", sf::Style::Close);
   window.setVerticalSyncEnabled(true);
@@ -155,17 +158,15 @@ void playMoveIfValid(board &game, int initPos, int targetPos) {
   for(int i = 0; i < moves.size(); i++) {
     if(side == LIGHT) {
       if(newLight == moves[i].valLight()) {
-        printf("Light played\n");
         game.makeMove(moves[i]);
-        game.printBoard();
+        //printf("Light: 0x%" PRIx64 "\nDark: 0x%" PRIx64 "\n", game.getLight(), game.getDark());
         break;
       }
     }
     if(side == DARK) {
       if(newDark == moves[i].valDark()) {
-        printf("Dark played\n");
         game.makeMove(moves[i]);
-        game.printBoard();
+        //printf("Light: 0x%" PRIx64 "\nDark: 0x%" PRIx64 "\n", game.getLight(), game.getDark());
         break;
       }
     }
