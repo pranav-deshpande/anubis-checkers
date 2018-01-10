@@ -111,7 +111,7 @@ int main() {
       printf("actX: %d, actY: %d\n", actX, actY);
 
       // Obtain the position as per the bitboard representation
-      int actPosition = (7-actY)*8 + (actX);
+      int actPosition = (7-actY)*8 + (7-actX);
 
       uint64_t light = game.getLight();
       uint64_t dark  = game.getDark();
@@ -136,7 +136,7 @@ int main() {
       int actY = y/CHECKER_SIZE;
 
       // Obtain the position as per the bitboard representation
-      int actPosition = (7-actY)*8 + (actX);
+      int actPosition = (7-actY)*8 + (7-actX);
 
       uint64_t light = game.getLight();
       uint64_t dark  = game.getDark();
@@ -176,7 +176,7 @@ void GUIprintBoard(board &game, sf::RenderWindow &window, sf::Sprite &redChecker
   uint64_t dark  = game.getDark();
 
   for(int i = 0; i < 64; i++) {
-    int xPos = (i%8) * multiple;
+    int xPos = (7 - i%8) * multiple;
     int yPos = (7 - i/8) * multiple;
     if ( (1ULL << i) & light ) {
       redChecker.setPosition(xPos, yPos);

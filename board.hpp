@@ -46,8 +46,8 @@ Premature optimization is the root of evil
 
 #define LIGHT 0
 #define DARK  1
-#define LIGHT_START 0x000000000055aa55
-#define DARK_START  0xaa55aa0000000000
+#define LIGHT_START 0x0000000000aa55aa
+#define DARK_START  0x55aa550000000000
 #define KING_START  0x0000000000000000
 
 class board {

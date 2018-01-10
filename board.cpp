@@ -46,7 +46,7 @@ Premature optimization is the root of evil
 #include <cstdint>
 
 board::board() {
-  setPosition(LIGHT, Move(LIGHT_START, DARK_START, KING_START));
+  setPosition(DARK, Move(LIGHT_START, DARK_START, KING_START));
 }
 
 void board::setPosition(uint64_t side, Move position) {
@@ -81,11 +81,11 @@ void board::printBoard() {
   for(int row = 7; row >= 0; row--) {
     int row_start = row * 8;
     int row_end = row_start + 8;
-    for(int col = row_start; col < row_end; col++) {
-      if ( (1ULL << col) & light ) {
+    for(int pos = row_end - 1; pos >= row_start; pos--) {
+      if ( (1ULL << pos) & light ) {
         std::cout << 'l';
       }
-      else if ( (1ULL << col) & dark ) {
+      else if ( (1ULL << pos) & dark ) {
         std::cout << 'd';
       }
       else
