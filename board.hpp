@@ -66,6 +66,7 @@ public:
   uint64_t getLight();
   uint64_t getDark();
   uint64_t getKing();
+  uint64_t getBlock();
 };
 
 #endif

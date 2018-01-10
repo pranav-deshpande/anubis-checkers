@@ -46,7 +46,7 @@ Premature optimization is the root of evil
 #include <cstdint>
 
 board::board() {
-  setPosition(DARK, Move(LIGHT_START, DARK_START, KING_START));
+  setPosition(LIGHT, Move(LIGHT_START, DARK_START, KING_START));
 }
 
 void board::setPosition(uint64_t side, Move position) {
@@ -75,6 +75,10 @@ uint64_t board::getDark() {
 
 uint64_t board::getKing() {
   return king;
+}
+
+uint64_t board::getBlock() {
+  return (light | dark);
 }
 
 void board::printBoard() {

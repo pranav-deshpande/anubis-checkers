@@ -46,7 +46,6 @@ void playMoveIfValid(board &, int, int);
 int main() {
   board game;
   int initPos, targetPos;
-  targetPos = initPos = INVALID;
 
   sf::RenderWindow window(sf::VideoMode(600, 600), "Anubis - Checkers Playing AI", sf::Style::Close);
   window.setVerticalSyncEnabled(true);
@@ -79,6 +78,8 @@ int main() {
   redChecker.setTexture(redCircle);
   blueChecker.setTexture(blueCircle);
 
+  initPos   = INVALID;
+  targetPos = INVALID;
   while (window.isOpen()) {
     sf::Event event;
 
@@ -87,66 +88,8 @@ int main() {
         case sf::Event::Closed:
           window.close();
           break;
-
-        case sf::Event::MouseButtonPressed:
-          break;
-
         default:
           break;
-      }
-    }
-
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-    {
-      sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-
-      // now this makes us know which is the required checker selected!
-      // coordinates in multiples of 75 obtained
-      int x = localPosition.x - localPosition.x%CHECKER_SIZE;
-      int y = localPosition.y - localPosition.y%CHECKER_SIZE;
-
-      // map it to [0, 8)
-      int actX = x/CHECKER_SIZE;
-      int actY = y/CHECKER_SIZE;
-      printf("actX: %d, actY: %d\n", actX, actY);
-
-      // Obtain the position as per the bitboard representation
-      int actPosition = (7-actY)*8 + (7-actX);
-
-      uint64_t light = game.getLight();
-      uint64_t dark  = game.getDark();
-      uint64_t block = light | dark;
-
-      if ( (1ULL << actPosition) & block ){
-        initPos = actPosition;
-      }
-      else {
-        initPos = INVALID;
-      }
-    }
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
-      sf::Vector2i localPosition = sf::Mouse::getPosition(window);
-
-      // coordinates in multiples of CHECKER_SIZE obtained
-      int x = localPosition.x - localPosition.x%CHECKER_SIZE;
-      int y = localPosition.y - localPosition.y%CHECKER_SIZE;
-
-      // map it to [0, 8)
-      int actX = x/CHECKER_SIZE;
-      int actY = y/CHECKER_SIZE;
-
-      // Obtain the position as per the bitboard representation
-      int actPosition = (7-actY)*8 + (7-actX);
-
-      uint64_t light = game.getLight();
-      uint64_t dark  = game.getDark();
-      uint64_t block = light | dark;
-
-      if ( (1ULL << actPosition) & block ){
-        targetPos = INVALID;
-      }
-      else {
-        targetPos = actPosition;
       }
     }
     if ( initPos != INVALID && targetPos != INVALID ) {
@@ -154,17 +97,22 @@ int main() {
       initPos   = INVALID;
       targetPos = INVALID;
     }
-
-    // clear the window
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && targetPos == INVALID)
+    {
+      sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+      int x = (localPosition.x - localPosition.x%CHECKER_SIZE)/CHECKER_SIZE;
+      int y = (localPosition.y - localPosition.y%CHECKER_SIZE)/CHECKER_SIZE;
+      initPos = (7-y)*8 + (7-x);
+    }
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && initPos != INVALID) {
+      sf::Vector2i localPosition = sf::Mouse::getPosition(window);
+      int x = (localPosition.x - localPosition.x%CHECKER_SIZE)/CHECKER_SIZE;
+      int y = (localPosition.y - localPosition.y%CHECKER_SIZE)/CHECKER_SIZE;
+      targetPos = (7-y)*8 + (7-x);
+    }
     window.clear(sf::Color::Black);
-
-    // draw the board
     window.draw(boardDisplay);
-
-    // draw the pieces
     GUIprintBoard(game, window, redChecker, blueChecker);
-
-    // end the current frame
     window.display();
   }
   return 0;
@@ -175,14 +123,14 @@ void GUIprintBoard(board &game, sf::RenderWindow &window, sf::Sprite &redChecker
   uint64_t light = game.getLight();
   uint64_t dark  = game.getDark();
 
-  for(int i = 0; i < 64; i++) {
+  for(int i = 63; i >= 0; i--) {
     int xPos = (7 - i%8) * multiple;
     int yPos = (7 - i/8) * multiple;
     if ( (1ULL << i) & light ) {
       redChecker.setPosition(xPos, yPos);
       window.draw(redChecker);
     }
-    else if ( (1ULL << i) & dark ) {
+    if ( (1ULL << i) & dark ) {
       blueChecker.setPosition(xPos, yPos);
       window.draw(blueChecker);
     }
@@ -191,47 +139,36 @@ void GUIprintBoard(board &game, sf::RenderWindow &window, sf::Sprite &redChecker
 }
 
 void playMoveIfValid(board &game, int initPos, int targetPos) {
-
-  // Obtain the current state of the board
-  uint64_t light, dark;
-  light = game.getLight();
-  dark  = game.getDark();
   int side = game.getSide();
+  uint64_t newLight = game.getLight();
+  uint64_t newDark  = game.getDark();
+
+  newLight = newLight & ~ (1ULL<<initPos);
+  newLight = newLight | (1ULL<<targetPos);
+
+  newDark = newDark & ~ (1ULL<<initPos);
+  newDark = newDark | (1ULL<<targetPos);
 
   std::vector<Move> moves;
   game.generateAllMoves(moves);
 
-  for(auto it = moves.begin(); it != moves.end(); it++) {
-    if (side == LIGHT && ((1ULL << initPos) & light)) {
-      if ( (1ULL << targetPos) & it->valLight() ) {
-        game.makeMove(*it);
+  for(int i = 0; i < moves.size(); i++) {
+    if(side == LIGHT) {
+      if(newLight == moves[i].valLight()) {
+        printf("Light played\n");
+        game.makeMove(moves[i]);
         game.printBoard();
-        printf("Light played.\n");
-        return;
+        break;
       }
     }
-    if (side == DARK && ((1ULL << initPos) & dark)) {
-      if ((1ULL << targetPos) & it->valDark() ) {
-        game.makeMove(*it);
+    if(side == DARK) {
+      if(newDark == moves[i].valDark()) {
+        printf("Dark played\n");
+        game.makeMove(moves[i]);
         game.printBoard();
-        printf("Dark played.\n");
-        return;
+        break;
       }
     }
   }
+
 }
-
-/*
-int main() {
-  board game;
-  //manualTest(game);
-  simpleMoveTest(game);
-
-
-  //board game2;
-  //game2.setPosition(DARK, Move(LIGHT_START, DARK_START, KING_START));
-  //manualTest(game2);
-
-  return 0;
-}
-*/
