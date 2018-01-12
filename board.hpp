@@ -60,6 +60,8 @@ public:
   void setPosition(uint64_t side, Move position);
   void printBoard();
   void generateAllMoves(std::vector<Move> &);
+  void generateCaptureMoves(std::vector<Move> &);
+  void generateNonCaptureMoves(std::vector<Move> &);
   void makeMove(Move);
   void undoMove();
   int getSide();
